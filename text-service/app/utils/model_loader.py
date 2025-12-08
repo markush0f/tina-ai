@@ -3,10 +3,10 @@ from transformers import (
     AutoTokenizer,
     AutoModel,
     AutoModelForSequenceClassification,
-    pipeline
+    pipeline,
 )
 
-BASE_PATH = Path(__file__).resolve().parents[2] / "models"
+BASE_PATH = Path(__file__).resolve().parents[2] / "ai-models"
 
 
 def load_tokenizer(model_name: str):
@@ -16,7 +16,9 @@ def load_tokenizer(model_name: str):
 
 def load_sequence_model(model_name: str):
     model_path = BASE_PATH / model_name
-    return AutoModelForSequenceClassification.from_pretrained(str(model_path), local_files_only=True)
+    return AutoModelForSequenceClassification.from_pretrained(
+        str(model_path), local_files_only=True
+    )
 
 
 def load_embedding_model(model_name: str):
@@ -33,5 +35,5 @@ def build_classification_pipeline(model_name: str):
         tokenizer=tokenizer,
         model=model,
         top_k=None,
-        truncation=True
+        truncation=True,
     )

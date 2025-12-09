@@ -105,7 +105,7 @@ class TopicService:
     def _match_subtopics_to_topics(
         self,
         subtopics: List[str],
-        general_topics: List[Dict[str, List]],
+        general_topics: List[str],
     ) -> Dict[str, Any]:
         """
         For each subtopic, find the most similar general topic using embeddings.

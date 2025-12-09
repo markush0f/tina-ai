@@ -1,8 +1,10 @@
+import keyword
 from typing import Any, Dict, List
 import numpy as np
 from sentence_transformers import SentenceTransformer, util
 import spacy
 from spacy.cli.download import download
+import torch
 import yake
 
 
@@ -89,7 +91,7 @@ class TopicService:
         keywords = self.extract_keywords(text)
         return list(set(noun_phrases + keywords))
 
-    def extract_topics(self, text: str):
+    def extract_subtopics(self, text: str):
         """Full pipeline: extract, normalize, and dedupe topics (change implemented here)."""
         candidates = self.extract_candidates(text)
 
@@ -102,101 +104,114 @@ class TopicService:
 
         return final_topics
 
-    def _match_subtopics_to_topics(
-        self,
-        subtopics: List[str],
-        general_topics: List[str],
-    ) -> Dict[str, Any]:
-        """
-        For each subtopic, find the most similar general topic using embeddings.
-        Returns a mapping topic -> [subtopics...] and the primary topic.
-        """
-        if not subtopics or not general_topics:
-            return {
-                "subtopics": subtopics,
-                "topic_map": {t: [] for t in general_topics},
-                "primary_topic": None,
-            }
-
-        # Embeddings of topics and subtopics
-        topic_embeddings = self.emb_model.encode(general_topics, convert_to_tensor=True)
-        subtopic_embeddings = self.emb_model.encode(subtopics, convert_to_tensor=True)
-
-        # Accumulate which subtopics fall under each topic
-        topic_map: Dict[str, List[str]] = {t: [] for t in general_topics}
-
-        # Stores, for each topic, the greatest similarity it has had with any subtopic.
-        topic_max_score: Dict[str, float] = {t: 0.0 for t in general_topics}
-
-        # Assign each subtopic to a topic
-        for i, sub in enumerate(subtopics):
-            sims = util.cos_sim(subtopic_embeddings[i], topic_embeddings)[0]
-            #
-            sims_np = sims.cpu().numpy()
-            print("Convertimos a numpy: ", sims_np)
-
-            # Take the most similar index
-            best_idx = int(np.argmax(sims_np))
-            # Take the best topic for subtopic
-            best_topic = general_topics[best_idx]
-            # Take the best score of subtopic
-            best_score = float(sims_np[best_idx])
-
-            # Save subtopic inside topic selected
-            topic_map[best_topic].append(sub)
-
-            # Save the best score to that topic
-            topic_max_score[best_topic] = max(topic_max_score[best_topic], best_score)
-
-        # Filter topics without subtopics
-        filtered_topic_map = {t: subs for t, subs in topic_map.items() if subs}
-        print(f"Filtered topics: {filtered_topic_map}")
-        # Calculate primary_topic only between the topics with subtopics
-        if filtered_topic_map:
-            primary_topic = max(
-                filtered_topic_map.keys(),
-                key = lambda t: topic_max_score[t]
-            )
-        primary_topic = None
-        if any(topic_map.values()):
-            primary_topic = max(topic_max_score, key=topic_max_score.get)
-
-        return {
-            "subtopics": subtopics,
-            "topic_map": topic_map,
-            "primary_topic": primary_topic,
-        }
-
+    # ----------------------------------------------------------
+    # MATCHING SUBTOPICS -> GENERAL TOPICS (KEYWORDS EMBEDDINGS)
+    # ----------------------------------------------------------
     def analyze_with_topics(
         self,
         text: str,
-        general_topics: List[str],
-    ) -> Dict[str, Any]:
-        """
-        Main entrypoint:
-        - extract subtopics from text
-        - match each subtopic to the closest general topic
-        """
-        subtopics = self.extract_topics(text)
-        result = self._match_subtopics_to_topics(subtopics, general_topics)
-        return result
+        general_topics: List[Dict[str, Any]],
+        similarity_threshold: float = 0.40,
+    ):
+        subtopics = self.extract_subtopics(text)
+
+        if not subtopics:
+            return {
+                "subtopics": [],
+                "topic_map": {},
+                "primary_topic": None,
+            }
+
+        subtopic_embeddings = self.emb_model.encode(subtopics, convert_to_tensor=True)
+
+        topic_keywords_embeddings = []
+        topic_names = []
+
+        for topic_data in general_topics:
+            topic_name = topic_data["topic"]
+            keywords = topic_data.get("keywords", [])
+
+            emb = self._embed_topic_keywords(keywords)
+            if emb is not None:
+                topic_names.append(topic_name)
+                topic_keywords_embeddings.append(emb)
+
+        if not topic_keywords_embeddings:
+            return {
+                "subtopics": subtopics,
+                "topic_map": {},
+                "primary_topic": None,
+            }
+
+        # Stack embeddings into a single 2D tensor
+        topic_keywords_embeddings = torch.stack(topic_keywords_embeddings)
+
+        topic_map = {t: [] for t in topic_names}
+        topic_scores = {t: 0.0 for t in topic_names}
+
+        for i, subtopic in enumerate(subtopics):
+            best_score, best_idx = self._best_idx_score_of_subtopics_with_topics(
+                subtopic_embeddings[i],
+                topic_keywords_embeddings,
+            )
+
+            if best_score >= similarity_threshold:
+                best_topic = topic_names[best_idx]
+                topic_map[best_topic].append(subtopic)
+                topic_scores[best_topic] = max(topic_scores[best_topic], best_score)
+
+        filtered_map = self._filter_empty_topics(topic_map.items())
+        primary_topic = self._determine_primary_topic(filtered_map, topic_scores)
+
+        return {
+            "subtopics": subtopics,
+            "topic_map": filtered_map,
+            "primary_topic": primary_topic,
+        }
+
+    def _determine_primary_topic(self, filtered_map, scores):
+        if not filtered_map:
+            return None
+        return max(filtered_map.keys(), key=lambda t: scores[t])
+
+    def _filter_empty_topics(self, topic_map_items):
+        return {t: subs for t, subs in topic_map_items if subs}
+
+    def _best_idx_score_of_subtopics_with_topics(
+        self,
+        subtopic_embedding,
+        topic_keywords_embeddings,
+    ):
+        sims = (
+            util.cos_sim(subtopic_embedding, topic_keywords_embeddings)[0].cpu().numpy()
+        )
+
+        best_idx = int(np.argmax(sims))
+        best_score = float(sims[best_idx])
+
+        return best_score, best_idx
+
+    def _embed_topic_keywords(self, keywords: List[str]):
+        if not keywords:
+            return None
+
+        text = " ".join(keywords)
+        return self.emb_model.encode(text, convert_to_tensor=True)
 
 
 # TESTING
+# TESTING
+from pprint import pprint
+
 topic = TopicService()
+
 text = "Hoy me sentí muy ansioso en clase pero luego en el gimnasio me relajé."
-# print(topic.extract_noun_phrases(text))
-# print(topic.extract_keywords(text))
-# candidates = topic.extract_candidates(text)
-# dedupe = topic.dedupe_topics(candidates)
-# print("DEDUPE: ", dedupe)
-# topics = topic.extract_topics(text)
-# print("Topics: ", topics)
-analizer = topic.analyze_with_topics(text,["colegio", "entrenar"])
-print(analizer)
-# def show_model_location():
-#     path = get_package_path("es_core_news_md")
-#     print(f"Model installed at: {path}")
 
+general_topics = [
+    {"topic": "colegio", "keywords": ["colegio", "clase", "estudio", "profesor"]},
+    {"topic": "entrenar", "keywords": ["gimnasio", "ejercicio", "deporte", "entrenar"]},
+]
 
-# show_model_location()
+result = topic.analyze_with_topics(text, general_topics)
+
+pprint(result)

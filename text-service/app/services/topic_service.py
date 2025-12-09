@@ -120,6 +120,8 @@ class TopicService:
                 "subtopics": [],
                 "topic_map": {},
                 "primary_topic": None,
+                "topic_scores": {},
+                "scores_by_subtopic": {},
             }
 
         subtopic_embeddings = self.emb_model.encode(subtopics, convert_to_tensor=True)
@@ -141,19 +143,29 @@ class TopicService:
                 "subtopics": subtopics,
                 "topic_map": {},
                 "primary_topic": None,
+                "topic_scores": {},
+                "scores_by_subtopic": {},
             }
 
-        # Stack embeddings into a single 2D tensor
         topic_keywords_embeddings = torch.stack(topic_keywords_embeddings)
 
         topic_map = {t: [] for t in topic_names}
         topic_scores = {t: 0.0 for t in topic_names}
+
+        # Added: store scores per subtopic for better analytics
+        scores_by_subtopic = {}
 
         for i, subtopic in enumerate(subtopics):
             best_score, best_idx = self._best_idx_score_of_subtopics_with_topics(
                 subtopic_embeddings[i],
                 topic_keywords_embeddings,
             )
+
+            # Added: save score for this subtopic even if threshold isn't passed
+            scores_by_subtopic[subtopic] = {
+                "best_topic": topic_names[best_idx],
+                "score": best_score,
+            }
 
             if best_score >= similarity_threshold:
                 best_topic = topic_names[best_idx]
@@ -167,6 +179,8 @@ class TopicService:
             "subtopics": subtopics,
             "topic_map": filtered_map,
             "primary_topic": primary_topic,
+            "topic_scores": topic_scores,  # Added
+            "scores_by_subtopic": scores_by_subtopic,  # Added
         }
 
     def _determine_primary_topic(self, filtered_map, scores):
@@ -215,3 +229,4 @@ general_topics = [
 result = topic.analyze_with_topics(text, general_topics)
 
 pprint(result)
+# TODO  DEVOLVER LOS SCORES TAMBIEN

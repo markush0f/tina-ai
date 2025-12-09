@@ -1,6 +1,5 @@
 from typing import List, Dict, Any
 import re
-import math
 
 from app.utils.model_loader import build_classification_pipeline
 
@@ -92,6 +91,7 @@ class EmotionalAnalyzerService:
     # ---------------------------------------------------------
     # Prevent extreme words (death, suicide, trauma) from overpowering narrative
     # ---------------------------------------------------------
+    # TODO migrarlo a una base de datos
     def context_correction(self, label: str, score: float, phase: str) -> float:
         extreme_keywords = [
             "died",

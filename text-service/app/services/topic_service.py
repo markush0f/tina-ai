@@ -214,7 +214,6 @@ class TopicService:
 
 
 # TESTING
-# TESTING
 from pprint import pprint
 
 topic = TopicService()

@@ -1,0 +1,7 @@
+{
+  "text": "Today I felt very anxious in class, but then I relaxed at the gym.",
+  "topics": [
+    { "topic": "school", "keywords": ["class", "study", "teacher"] },
+    { "topic": "training", "keywords": ["gym", "exercise", "sports"] }
+  ]
+}

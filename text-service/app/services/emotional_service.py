@@ -1,3 +1,4 @@
+import math
 from typing import List, Dict, Any
 import re
 
@@ -66,8 +67,8 @@ class EmotionalAnalyzerService:
         # Apply emotion scaling adjustments
         adjusted = []
         for item in scores:
-            label = item["label"]
-            score = float(item["score"]) * self.emotion_scaling[label]
+            label = item["label"]  # type: ignore
+            score = float(item["score"]) * self.emotion_scaling[label]  # type: ignore
             adjusted.append({"label": label, "score": score})
 
         return sorted(adjusted, key=lambda x: x["score"], reverse=True)
@@ -147,7 +148,10 @@ class EmotionalAnalyzerService:
                     accumulator[label] += weighted_score
 
         total_score = sum(accumulator.values())
-        normalized = {k: v / total_score for k, v in accumulator.items()}
+        normalized = {
+            k: math.exp(v) / sum(math.exp(x) for x in accumulator.values())
+            for k, v in accumulator.items()
+        }
 
         primary = max(normalized, key=lambda k: normalized[k])
         primary_score = normalized[primary]

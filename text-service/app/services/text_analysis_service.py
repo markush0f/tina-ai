@@ -12,7 +12,7 @@ class TextAnalysisService:
     - Emotional analysis (emotion scores)
     - Sentiment reasoning (dominance, polarity, intensity, mixed emotions)
     - Topic classification (topics + subtopics)
-    
+
     This service returns a complete structured package of the user's
     emotional and topical interpretation for a given text input.
     """
@@ -28,7 +28,9 @@ class TextAnalysisService:
         self.topics = topic_service
 
     # High-level analysis entrypoint
-    def analyze(self, text: str, general_topics: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def analyze(
+        self, text: str, general_topics: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """
         Performs the full text analysis pipeline:
         1. Extract raw emotion scores from text
@@ -38,10 +40,9 @@ class TextAnalysisService:
         5. Return unified analysis package
         """
 
-        # 1. Raw emotional scores
-        raw_emotions = self._format_emotions(
-            self.emotional.analyze(text)
-        )  # convert list -> dict
+        # 1. Advanced emotional scores using phase/sentence fusion
+        emotion_pkg = self.emotional.analyze_with_sentence_comparison(text)
+        raw_emotions = emotion_pkg["fusion"]["composition"]
 
         # 2. Sentiment reasoning
         sentiment_result = self.sentiment.analyze(raw_emotions)
@@ -57,6 +58,7 @@ class TextAnalysisService:
                 "emotions": raw_emotions,
                 "sentiment": sentiment_result,
                 "topics": topic_result,
+                "emotional_debug": emotion_pkg,  # opcional si quieres depurar
             },
         }
 
@@ -87,4 +89,3 @@ def get_text_analysis_service():
         sentiment_service=SentimentService(),
         topic_service=TopicService(),
     )
-

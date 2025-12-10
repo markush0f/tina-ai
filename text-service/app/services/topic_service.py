@@ -12,13 +12,13 @@ class TopicService:
     """Extract all subtopics"""
 
     def __init__(self) -> None:
+        model = "en_core_web_md"
         try:
-            self.nlp = spacy.load("es_core_news_md")
+            self.nlp = spacy.load(model)
         except OSError:
-            model = "es_core_news_md"
             # self.logger(f"Downloaded model {model}")
             download(model)
-            self.nlp = spacy.load("es_core_news_md")
+            self.nlp = spacy.load(model)
 
         # Load embedding model (change implemented here)
         self.emb_model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -108,11 +108,11 @@ class TopicService:
     # MATCHING SUBTOPICS -> GENERAL TOPICS (KEYWORDS EMBEDDINGS)
     # ----------------------------------------------------------
     def analyze_with_topics(
-        self,
-        text: str,
-        general_topics: List[Dict[str, Any]],
-        similarity_threshold: float = 0.40,
-    ):
+    self,
+    text: str,
+    general_topics: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+
         subtopics = self.extract_subtopics(text)
 
         if not subtopics:
@@ -120,69 +120,99 @@ class TopicService:
                 "subtopics": [],
                 "topic_map": {},
                 "primary_topic": None,
-                "topic_scores": {},
+                "scores_by_topic": {},
                 "scores_by_subtopic": {},
             }
 
-        subtopic_embeddings = self.emb_model.encode(subtopics, convert_to_tensor=True)
+        # Embeddings for subtopics
+        sub_emb = self.emb_model.encode(subtopics, convert_to_tensor=True)
 
-        topic_keywords_embeddings = []
+        # Prepare topic embeddings
         topic_names = []
+        topic_emb_list = []
 
-        for topic_data in general_topics:
-            topic_name = topic_data["topic"]
-            keywords = topic_data.get("keywords", [])
-
+        for topic in general_topics:
+            name = topic["topic"]
+            keywords = topic.get("keywords", [])
             emb = self._embed_topic_keywords(keywords)
             if emb is not None:
-                topic_names.append(topic_name)
-                topic_keywords_embeddings.append(emb)
+                topic_names.append(name)
+                topic_emb_list.append(emb)
 
-        if not topic_keywords_embeddings:
+        if not topic_emb_list:
             return {
                 "subtopics": subtopics,
                 "topic_map": {},
                 "primary_topic": None,
-                "topic_scores": {},
+                "scores_by_topic": {},
                 "scores_by_subtopic": {},
             }
 
-        topic_keywords_embeddings = torch.stack(topic_keywords_embeddings)
-
         topic_map = {t: [] for t in topic_names}
-        topic_scores = {t: 0.0 for t in topic_names}
-
-        # Added: store scores per subtopic for better analytics
+        scores_by_topic = {t: [] for t in topic_names}
         scores_by_subtopic = {}
 
+        topic_emb_list = torch.stack(topic_emb_list, dim=0)
         for i, subtopic in enumerate(subtopics):
-            best_score, best_idx = self._best_idx_score_of_subtopics_with_topics(
-                subtopic_embeddings[i],
-                topic_keywords_embeddings,
+            sims = (
+                util.cos_sim(sub_emb[i], topic_emb_list)[0]
+                .cpu()
+                .numpy()
             )
 
-            # Added: save score for this subtopic even if threshold isn't passed
+            best_idx = int(np.argmax(sims))
+            best_topic = topic_names[best_idx]
+            best_score = float(sims[best_idx])
+            strength = self._strength_label(best_score)
+
+            # Record information
             scores_by_subtopic[subtopic] = {
-                "best_topic": topic_names[best_idx],
+                "best_topic": best_topic,
                 "score": best_score,
+                "strength": strength,
             }
 
-            if best_score >= similarity_threshold:
-                best_topic = topic_names[best_idx]
-                topic_map[best_topic].append(subtopic)
-                topic_scores[best_topic] = max(topic_scores[best_topic], best_score)
+            topic_map[best_topic].append(
+                {
+                    "subtopic": subtopic,
+                    "score": best_score,
+                    "strength": strength,
+                }
+            )
 
-        filtered_map = self._filter_empty_topics(topic_map.items())
-        primary_topic = self._determine_primary_topic(filtered_map, topic_scores)
+            scores_by_topic[best_topic].append(best_score)
+
+        # Remove empty topics
+        topic_map = {t: subs for t, subs in topic_map.items() if subs}
+
+        # Compute primary topic: average score
+        primary_topic = None
+        if topic_map:
+            primary_topic = max(
+                scores_by_topic.keys(),
+                key=lambda t: sum(scores_by_topic[t]) / len(scores_by_topic[t])
+                if scores_by_topic[t]
+                else 0
+            )
 
         return {
             "subtopics": subtopics,
-            "topic_map": filtered_map,
+            "topic_map": topic_map,
             "primary_topic": primary_topic,
-            "topic_scores": topic_scores,  # Added
-            "scores_by_subtopic": scores_by_subtopic,  # Added
+            "scores_by_topic": scores_by_topic,
+            "scores_by_subtopic": scores_by_subtopic,
         }
 
+    def _strength_label(self, score: float) -> str:
+        """Assigns a strength label based on similarity score."""
+        if score >= 0.40:
+            return "strong"
+        if score >= 0.20:
+            return "medium"
+        if score >= 0.10:
+            return "weak"
+        return "very_weak"
+    
     def _determine_primary_topic(self, filtered_map, scores):
         if not filtered_map:
             return None
@@ -214,18 +244,17 @@ class TopicService:
 
 
 # TESTING
-from pprint import pprint
+# from pprint import pprint
 
-topic = TopicService()
+# topic = TopicService()
 
-text = "Hoy me sentí muy ansioso en clase pero luego en el gimnasio me relajé."
+# text = "Hoy me sentí muy ansioso en clase pero luego en el gimnasio me relajé."
 
-general_topics = [
-    {"topic": "colegio", "keywords": ["colegio", "clase", "estudio", "profesor"]},
-    {"topic": "entrenar", "keywords": ["gimnasio", "ejercicio", "deporte", "entrenar"]},
-]
+# general_topics = [
+#     {"topic": "colegio", "keywords": ["colegio", "clase", "estudio", "profesor"]},
+#     {"topic": "entrenar", "keywords": ["gimnasio", "ejercicio", "deporte", "entrenar"]},
+# ]
 
-result = topic.analyze_with_topics(text, general_topics)
+# result = topic.analyze_with_topics(text, general_topics)
 
-pprint(result)
-# TODO  DEVOLVER LOS SCORES TAMBIEN
+# pprint(result)

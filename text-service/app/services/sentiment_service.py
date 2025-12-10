@@ -88,7 +88,7 @@ class SentimentService:
         return {"label": label, "score": score}
 
     # Final combined sentiment package
-    def analyze(self, emotions: Dict[str, float]) -> Dict[str, any]:
+    def analyze(self, emotions: Dict[str, float]) -> Dict[str, any]: # type: ignore
         """
         Produces the full sentiment reasoning package:
         - raw emotions
@@ -116,16 +116,16 @@ def get_sentiment_service():
     return SentimentService()
 
 # TEST
-service = SentimentService()
+# service = SentimentService()
 
-sample_emotions = {
-    "joy": 0.42,
-    "sadness": 0.12,
-    "anger": 0.05,
-    "fear": 0.08,
-    "disgust": 0.03,
-    "surprise": 0.31,
-}
+# sample_emotions = {
+#     "joy": 0.42,
+#     "sadness": 0.12,
+#     "anger": 0.05,
+#     "fear": 0.08,
+#     "disgust": 0.03,
+#     "surprise": 0.31,
+# }
 
-result = service.analyze(sample_emotions)
-print(result)
+# result = service.analyze(sample_emotions)
+# print(result)

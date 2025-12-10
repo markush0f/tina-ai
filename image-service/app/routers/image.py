@@ -8,8 +8,8 @@ router = APIRouter(prefix="/v1/image", tags=["image"])
 logger = get_logger(__name__)
 
 # The service is instantiated once when the module loads.
-image_service = ImageAnalysisService()
 
+image_service = ImageAnalysisService()
 
 @router.get("/ping")
 def ping() -> dict:

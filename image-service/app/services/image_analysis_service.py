@@ -6,7 +6,8 @@ from PIL import Image
 import torch
 
 from app.core.logger import get_logger
-from app.utils.model_loader import Blip2ModelRegistry
+from app.services.object_detection_service import ObjectDetectionService
+from app.utils.blip_loader import Blip2ModelRegistry
 
 logger = get_logger(__name__)
 
@@ -42,6 +43,8 @@ class ImageAnalysisService:
     def __init__(self) -> None:
         self.processor, self.model, self.device = Blip2ModelRegistry.get()
         self.model_id = Blip2ModelRegistry.model_id()
+        # load object detection service
+        self.object_detection_service = ObjectDetectionService()
 
     def _load_image(self, image_bytes: bytes) -> Image.Image:
         """
@@ -62,21 +65,17 @@ class ImageAnalysisService:
         """
         # https://huggingface.co/docs/transformers/model_doc/blip-2
         # get data converted in tensors of pytorch
-        inputs = self.processor(images=image, return_tensors="pt") # type: ignore
-        
+        inputs = self.processor(images=image, return_tensors="pt")  # type: ignore
+
         # Move tensors to device
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
         # Captioning
-        output_ids = self.model.generate(
-            **inputs,
-            max_new_tokens=60
-        )
+        output_ids = self.model.generate(**inputs, max_new_tokens=60)
 
         # IDS to text
-        caption = self.processor.tokenizer.decode(
-            output_ids[0],
-            skip_special_tokens=True
+        caption = self.processor.tokenizer.decode(  # type: ignore
+            output_ids[0], skip_special_tokens=True
         ).strip()
 
         return caption
@@ -89,10 +88,12 @@ class ImageAnalysisService:
 
         image = self._load_image(image_bytes)
         description = self._generate_caption(image)
-
+        
+        # run object detection with YOLO.
+        objects = self.object_detection_service.detect_objects(image)
         result = ImageAnalysisResult(
             description=description,
-            objects=[],
+            objects=objects,
             scene=None,
             actions=[],
             unified_text=description,

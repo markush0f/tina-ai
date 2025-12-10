@@ -114,18 +114,3 @@ class SentimentService:
 
 def get_sentiment_service():
     return SentimentService()
-
-# TEST
-# service = SentimentService()
-
-# sample_emotions = {
-#     "joy": 0.42,
-#     "sadness": 0.12,
-#     "anger": 0.05,
-#     "fear": 0.08,
-#     "disgust": 0.03,
-#     "surprise": 0.31,
-# }
-
-# result = service.analyze(sample_emotions)
-# print(result)

@@ -168,9 +168,7 @@ class EmotionalAnalyzerService:
             "composition": normalized,
         }
 
-    # ---------------------------------------------------------
     # Full analysis engine
-    # ---------------------------------------------------------
     def analyze_with_sentence_comparison(self, text: str) -> Dict[str, Any]:
         sentences = [s.strip() for s in re.split(r"[.!?]+", text) if s.strip()]
 

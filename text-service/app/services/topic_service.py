@@ -243,18 +243,3 @@ class TopicService:
         return self.emb_model.encode(text, convert_to_tensor=True)
 
 
-# TESTING
-# from pprint import pprint
-
-# topic = TopicService()
-
-# text = "Hoy me sentí muy ansioso en clase pero luego en el gimnasio me relajé."
-
-# general_topics = [
-#     {"topic": "colegio", "keywords": ["colegio", "clase", "estudio", "profesor"]},
-#     {"topic": "entrenar", "keywords": ["gimnasio", "ejercicio", "deporte", "entrenar"]},
-# ]
-
-# result = topic.analyze_with_topics(text, general_topics)
-
-# pprint(result)

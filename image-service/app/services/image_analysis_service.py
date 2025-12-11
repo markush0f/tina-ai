@@ -22,7 +22,6 @@ class ImageAnalysisResult:
     objects: List[str]
     scene: Optional[str]
     actions: List[str]
-    unified_text: str
     meta: Dict[str, Any]
 
     def to_dict(self) -> Dict[str, Any]:
@@ -58,6 +57,7 @@ class ImageAnalysisService:
 
         return image
 
+        
     @torch.inference_mode()
     def _generate_caption(self, image: Image.Image) -> str:
         """
@@ -96,7 +96,6 @@ class ImageAnalysisService:
             objects=objects,
             scene=None,
             actions=[],
-            unified_text=description,
             meta={
                 "model_id": self.model_id,
                 "device": self.device,

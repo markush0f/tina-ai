@@ -1,66 +1,51 @@
-# utils/model_loader.py
 from typing import Optional, Tuple
-import os
-from numpy import dtype
 import torch
-from transformers import Blip2Processor, Blip2ForConditionalGeneration
+from transformers import BlipProcessor, BlipForConditionalGeneration
 
 from app.core.logger import get_logger
 
 logger = get_logger(__name__)
 
 
-class Blip2ModelRegistry:
+class BlipModelRegistry:
     """
-    Centralized and lazy-loaded registry for the BLIP-2 model and processor.
+    Centralized and lazy-loaded registry for the BLIP captioning model.
 
-    The model is loaded only once per process to reduce startup cost and memory usage.
-    Access is provided via the `get()` method.
+    This loads the BLIP (NOT BLIP-2) processor and model only once per process
+    to minimize memory usage and startup time.
     """
 
-    # SAVE PREPROCESSOR of BLIP-2
-    _processor: Optional[Blip2Processor] = None
-
-    # SAVE MODEL OF BLIP-2
-    _model: Optional[Blip2ForConditionalGeneration] = None
-
-    # CUDA OR CPU
+    _processor: Optional[BlipProcessor] = None
+    _model: Optional[BlipForConditionalGeneration] = None
     _device: Optional[str] = None
 
-    # NAME OF MODEL IN HUGGINFACAE
-    _model_id: str = "Salesforce/blip2-opt-2.7b"
+    # Name of the BLIP model in HuggingFace
+    _model_id: str = "Salesforce/blip-image-captioning-large"
+    
+    # More ligth:
+    # _model_id: str = "Salesforce/blip-image-captioning-base"
 
     @classmethod
-    def get(cls) -> Tuple[Blip2Processor, Blip2ForConditionalGeneration, str]:
+    def get(cls) -> Tuple[BlipProcessor, BlipForConditionalGeneration, str]:
         """
-        Return the BLIP-2 processor, model and device.
-
-        If not already loaded, load them into memory.
+        Return the BLIP processor, model, and device.
+        Load them into memory if not already loaded.
         """
 
-        if (
-            cls._processor is not None
-            and cls._model is not None
-            and cls._device is not None
-        ):
+        if cls._processor and cls._model and cls._device:
             return cls._processor, cls._model, cls._device
 
-        # GPU = float16
-        # CPU = float32
         device: str = "cuda" if torch.cuda.is_available() else "cpu"
         torch_dtype = torch.float16 if device == "cuda" else torch.float32
 
-        logger.info("Loading BLIP-2 model '%s' on device '%s'", cls._model_id, device)
+        logger.info("Loading BLIP model '%s' on device '%s'", cls._model_id, device)
 
-        # Load preprocessor
-        processor = Blip2Processor.from_pretrained(cls._model_id)
-        # Load model
-        model = Blip2ForConditionalGeneration.from_pretrained(
+        processor = BlipProcessor.from_pretrained(cls._model_id)
+
+        model = BlipForConditionalGeneration.from_pretrained(
             cls._model_id,
-            dtype=torch_dtype,
-        ).to(
-            device  # type: ignore
-        )
+            torch_dtype=torch_dtype,
+        ).to(device) # type: ignore
 
         model.eval()
 
@@ -68,11 +53,11 @@ class Blip2ModelRegistry:
         cls._model = model
         cls._device = device
 
-        logger.info("BLIP-2 model loaded successfully")
+        logger.info("BLIP model loaded successfully")
 
         return processor, model, device
 
     @classmethod
     def model_id(cls) -> str:
-        """Expose the configured BLIP-2 model identifier."""
+        """Expose the configured BLIP model identifier."""
         return cls._model_id

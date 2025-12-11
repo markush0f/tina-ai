@@ -6,9 +6,10 @@ from PIL import Image
 import torch
 
 from app.core.logger import get_logger
+from app.services.action_recognition_service import ActionRecognitionService
 from app.services.object_detection_service import ObjectDetectionService
 from app.services.ocr_service import OcrService
-from app.utils.blip_loader import Blip2ModelRegistry
+from app.utils.blip_loader import BlipModelRegistry
 
 logger = get_logger(__name__)
 
@@ -42,13 +43,16 @@ class ImageAnalysisService:
     """
 
     def __init__(self) -> None:
-        self.processor, self.model, self.device = Blip2ModelRegistry.get()
-        self.model_id = Blip2ModelRegistry.model_id()
+        self.processor, self.model, self.device = BlipModelRegistry.get()
+        self.model_id = BlipModelRegistry.model_id()
+        
         # load object detection service
         self.object_detection_service = ObjectDetectionService()
+        
         # load OCR service
         self.ocr_service = OcrService()
 
+        self.action_service = ActionRecognitionService()
 
     def _load_image(self, image_bytes: bytes) -> Image.Image:
         """
@@ -100,6 +104,9 @@ class ImageAnalysisService:
         # run object detection with YOLO.
         objects = self.object_detection_service.detect_objects(image)
 
+        # run action recognition with CLIP Action model
+        actions = self.action_service.recognize(image)
+        
         result = ImageAnalysisResult(
             description=description,
             objects=objects,

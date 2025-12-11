@@ -5,3 +5,6 @@ openai-whisper
 numpy
 pydantic
 python-multipart
+transformers
+librosa
+soundfile

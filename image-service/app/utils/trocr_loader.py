@@ -29,12 +29,15 @@ class TrocrModelRegistry:
 
         logger.info("Loading TrOCR model '%s' on device '%s'", cls._model_id, device)
 
-        processor = TrOCRProcessor.from_pretrained(cls._model_id)
-        model = VisionEncoderDecoderModel.from_pretrained(cls._model_id).to(device) # type: ignore
+        processor = TrOCRProcessor.from_pretrained(
+            cls._model_id,
+            use_fast=True,
+        )
+        model = VisionEncoderDecoderModel.from_pretrained(cls._model_id).to(device)  # type: ignore
         model.eval()
 
         cls._processor = processor
-        cls._model = model # type: ignore
+        cls._model = model  # type: ignore
         cls._device = device
 
         logger.info("TrOCR model loaded successfully")

@@ -33,8 +33,11 @@ class ClipModelRegistry:
 
         logger.info("Loading CLIP model '%s' on device '%s'", cls._model_id, device)
 
-        processor = CLIPProcessor.from_pretrained(cls._model_id)
-        model = CLIPModel.from_pretrained(cls._model_id).to(device) # type: ignore
+        processor = CLIPProcessor.from_pretrained(
+            cls._model_id,
+            use_fast=True,
+        )
+        model = CLIPModel.from_pretrained(cls._model_id).to(device)  # type: ignore
 
         model.eval()
 

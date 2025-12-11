@@ -21,7 +21,7 @@ class BlipModelRegistry:
 
     # Name of the BLIP model in HuggingFace
     _model_id: str = "Salesforce/blip-image-captioning-large"
-    
+
     # More ligth:
     # _model_id: str = "Salesforce/blip-image-captioning-base"
 
@@ -36,16 +36,21 @@ class BlipModelRegistry:
             return cls._processor, cls._model, cls._device
 
         device: str = "cuda" if torch.cuda.is_available() else "cpu"
-        torch_dtype = torch.float16 if device == "cuda" else torch.float32
+        dtype = torch.float16 if device == "cuda" else torch.float32
 
         logger.info("Loading BLIP model '%s' on device '%s'", cls._model_id, device)
 
-        processor = BlipProcessor.from_pretrained(cls._model_id)
+        processor = BlipProcessor.from_pretrained(
+            cls._model_id,
+            use_fast=True,
+        )
 
         model = BlipForConditionalGeneration.from_pretrained(
             cls._model_id,
-            torch_dtype=torch_dtype,
-        ).to(device) # type: ignore
+            dtype=dtype,
+        ).to(
+            device  # type: ignore
+        )
 
         model.eval()
 

@@ -1,6 +1,7 @@
 # utils/model_loader.py
 from typing import Optional, Tuple
-
+import os
+from numpy import dtype
 import torch
 from transformers import Blip2Processor, Blip2ForConditionalGeneration
 
@@ -19,7 +20,7 @@ class Blip2ModelRegistry:
 
     # SAVE PREPROCESSOR of BLIP-2
     _processor: Optional[Blip2Processor] = None
-    
+
     # SAVE MODEL OF BLIP-2
     _model: Optional[Blip2ForConditionalGeneration] = None
 
@@ -36,8 +37,12 @@ class Blip2ModelRegistry:
 
         If not already loaded, load them into memory.
         """
-        
-        if cls._processor is not None and cls._model is not None and  cls._device is not None:
+
+        if (
+            cls._processor is not None
+            and cls._model is not None
+            and cls._device is not None
+        ):
             return cls._processor, cls._model, cls._device
 
         # GPU = float16
@@ -52,8 +57,10 @@ class Blip2ModelRegistry:
         # Load model
         model = Blip2ForConditionalGeneration.from_pretrained(
             cls._model_id,
-            torch_dtype=torch_dtype,
-        ).to(device) # type: ignore
+            dtype=torch_dtype,
+        ).to(
+            device  # type: ignore
+        )
 
         model.eval()
 

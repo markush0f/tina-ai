@@ -1,14 +1,14 @@
 from typing import Optional
 from paddleocr import PaddleOCR
 
-from core.logger import get_logger
+from app.core.logger import get_logger
 
 logger = get_logger(__name__)
 
 
 class OcrModelRegistry:
     """
-    Centralized registry for the OCR model.
+Centralized registry for the OCR model.
     Loads PaddleOCR only once.
     """
 
@@ -25,7 +25,7 @@ class OcrModelRegistry:
         cls._ocr = PaddleOCR(
             use_angle_cls=True,
             lang="en", 
-            show_log=False,
+            # show_log=False,
         )
 
         logger.info("PaddleOCR loaded successfully")

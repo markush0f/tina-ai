@@ -7,6 +7,7 @@ import torch
 
 from app.core.logger import get_logger
 from app.services.object_detection_service import ObjectDetectionService
+from app.services.ocr_service import OcrService
 from app.utils.blip_loader import Blip2ModelRegistry
 
 logger = get_logger(__name__)
@@ -23,6 +24,7 @@ class ImageAnalysisResult:
     scene: Optional[str]
     actions: List[str]
     meta: Dict[str, Any]
+    ocr_text: List[str]
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert object into plain dictionary for JSON responses."""
@@ -44,6 +46,9 @@ class ImageAnalysisService:
         self.model_id = Blip2ModelRegistry.model_id()
         # load object detection service
         self.object_detection_service = ObjectDetectionService()
+        # load OCR service
+        self.ocr_service = OcrService()
+
 
     def _load_image(self, image_bytes: bytes) -> Image.Image:
         """
@@ -88,14 +93,19 @@ class ImageAnalysisService:
 
         image = self._load_image(image_bytes)
         description = self._generate_caption(image)
+
+        # run OCR with PaddleOCR
+        ocr_text = self.ocr_service.extract_text(image)
         
         # run object detection with YOLO.
         objects = self.object_detection_service.detect_objects(image)
+
         result = ImageAnalysisResult(
             description=description,
             objects=objects,
             scene=None,
             actions=[],
+            ocr_text=ocr_text,
             meta={
                 "model_id": self.model_id,
                 "device": self.device,

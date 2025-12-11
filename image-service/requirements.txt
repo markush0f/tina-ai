@@ -5,5 +5,4 @@ transformers
 accelerate
 Pillow
 ultralytics
-paddlepaddle
-paddleocr
+

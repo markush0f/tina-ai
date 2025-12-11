@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 from app.routers.image import router as image_router
+import os
+
+# DISABLE CHECK FOR MODEL SOURCE IN HUGGINGFACE
+os.environ["DISABLE_MODEL_SOURCE_CHECK"] = "True"
 
 # FastAPI application instance
 app = FastAPI()

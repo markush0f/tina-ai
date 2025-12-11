@@ -2,7 +2,7 @@ from typing import Optional
 import torch
 from transformers import AutoModelForAudioClassification, AutoFeatureExtractor
 
-from core.logger import get_logger
+from app.core.logger import get_logger
 
 logger = get_logger(__name__)
 

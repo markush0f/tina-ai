@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File, HTTPException
 import tempfile
 import os
 
@@ -6,20 +6,25 @@ from app.services.audio_analysis_service import AudioAnalysisService
 
 router = APIRouter(prefix="/analyze/audio", tags=["audio"])
 
-audio_service = AudioAnalysisService()
+analysis_service = AudioAnalysisService()
 
 
 @router.post("/")
 async def analyze_audio(file: UploadFile = File(...)):
-    # Save uploaded file temporarily
-    with tempfile.NamedTemporaryFile(delete=False, suffix=file.filename) as tmp:
-        tmp.write(await file.read())
-        tmp_path = tmp.name
+    tmp_path = None
 
-    # Run analysis
-    result = audio_service.analyze(tmp_path)
+    try:
+        # Create temporary input file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=file.filename) as tmp:
+            tmp.write(await file.read())
+            tmp_path = tmp.name
 
-    # Remove temp file
-    os.remove(tmp_path)
+        return analysis_service.analyze(tmp_path)
 
-    return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    finally:
+        # Remove original uploaded file
+        if tmp_path and os.path.exists(tmp_path):
+            os.remove(tmp_path)

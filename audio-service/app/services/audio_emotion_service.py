@@ -3,8 +3,8 @@ import torch
 import librosa
 import numpy as np
 
-from utils.audio_emotion_loader import AudioEmotionModelRegistry
-from core.logger import get_logger
+from app.utils.audio_emotion_loader import AudioEmotionModelRegistry
+from app.core.logger import get_logger
 
 logger = get_logger(__name__)
 

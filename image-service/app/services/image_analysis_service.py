@@ -6,9 +6,10 @@ from PIL import Image
 import torch
 
 from app.core.logger import get_logger
-from app.services.action_recognition_service import ActionRecognitionService
 from app.services.object_detection_service import ObjectDetectionService
 from app.services.ocr_service import OcrService
+from app.services.scene_service import SceneClassificationService
+
 from app.utils.blip_loader import BlipModelRegistry
 
 logger = get_logger(__name__)
@@ -45,14 +46,16 @@ class ImageAnalysisService:
     def __init__(self) -> None:
         self.processor, self.model, self.device = BlipModelRegistry.get()
         self.model_id = BlipModelRegistry.model_id()
-        
+
         # load object detection service
         self.object_detection_service = ObjectDetectionService()
-        
+
         # load OCR service
         self.ocr_service = OcrService()
 
-        self.action_service = ActionRecognitionService()
+        # self.action_service = ActionRecognitionService()
+
+        self.scene_service = SceneClassificationService()
 
     def _load_image(self, image_bytes: bytes) -> Image.Image:
         """
@@ -66,26 +69,35 @@ class ImageAnalysisService:
 
         return image
 
-        
     @torch.inference_mode()
     def _generate_caption(self, image: Image.Image) -> str:
         """
-        Generate a natural caption for the given image using BLIP-2.
+        Generate a natural-language caption for the given image using the BLIP model.
+
+        Responsibilities:
+        - Preprocess the input image with the BLIP processor
+        - Move tensors to the correct device (CPU/GPU)
+        - Run BLIP’s autoregressive text generation
+        - Decode the generated token IDs into a human-readable string
         """
-        # https://huggingface.co/docs/transformers/model_doc/blip-2
-        # get data converted in tensors of pytorch
-        inputs = self.processor(images=image, return_tensors="pt")  # type: ignore
 
-        # Move tensors to device
-        inputs = {k: v.to(self.device) for k, v in inputs.items()}
+        # BLIP processor expects the argument "image", not "images"
+        # It converts the Pillow image into normalized PyTorch tensors.
+        inputs = self.processor(
+            image,
+            return_tensors="pt",  # type: ignore
+        ).to(self.device)
 
-        # Captioning
+        # Generate text from the visual features.
+        # BLIP uses an encoder-decoder architecture, so we request a maximum
+        # number of tokens to avoid excessively long generations.
         output_ids = self.model.generate(**inputs, max_new_tokens=60)
 
-        # IDS to text
-        caption = self.processor.tokenizer.decode(  # type: ignore
-            output_ids[0], skip_special_tokens=True
-        ).strip()
+        # Convert the token IDs returned by BLIP into a readable text caption.
+        # `batch_decode` handles string construction and removes special tokens.
+        caption = self.processor.batch_decode(output_ids, skip_special_tokens=True)[
+            0
+        ].strip()
 
         return caption
 
@@ -100,17 +112,20 @@ class ImageAnalysisService:
 
         # run OCR with PaddleOCR
         ocr_text = self.ocr_service.extract_text(image)
-        
+
         # run object detection with YOLO.
         objects = self.object_detection_service.detect_objects(image)
 
         # run action recognition with CLIP Action model
-        actions = self.action_service.recognize(image)
-        
+        # actions = self.action_service.recognize(image)
+
+        # run scene classification with CLIP Scene model
+        scene = self.scene_service.classify(image)
+
         result = ImageAnalysisResult(
             description=description,
             objects=objects,
-            scene=None,
+            scene=scene,
             actions=[],
             ocr_text=ocr_text,
             meta={

@@ -22,7 +22,7 @@ class BlipModelRegistry:
     # Name of the BLIP model in HuggingFace
     _model_id: str = "Salesforce/blip-image-captioning-large"
 
-    # More ligth:
+    # Ligth option:
     # _model_id: str = "Salesforce/blip-image-captioning-base"
 
     @classmethod

@@ -1,0 +1,55 @@
+2025-12-11 23:07:34 | INFO | app.utils.whisper_loader | Loading Whisper model 'medium' on device 'cuda'
+2025-12-11 23:08:07 | INFO | app.utils.whisper_loader | Whisper model loaded successfully
+2025-12-11 23:08:26 | INFO | app.services.audio_analysis_service | Running transcription on file: /tmp/tmp_ny4ymb92025-11-10 19-32-01.mp4
+2025-12-11 23:08:45 | INFO | app.services.audio_analysis_service | Running transcription on file: /tmp/tmpidrqr8rt2025-11-17 19-37-14.mp4
+2025-12-11 23:09:05 | INFO | app.services.audio_analysis_service | Running transcription on file: /tmp/tmpgs72essw2025-11-17 19-44-24.mp4
+2025-12-11 23:09:33 | INFO | app.utils.whisper_loader | Loading Whisper model 'medium' on device 'cuda'
+2025-12-11 23:09:41 | INFO | app.utils.whisper_loader | Whisper model loaded successfully
+2025-12-11 23:19:12 | INFO | app.utils.whisper_loader | Loading Whisper model 'medium' on device 'cuda'
+2025-12-11 23:19:19 | INFO | app.utils.whisper_loader | Whisper model loaded successfully
+2025-12-11 23:19:19 | INFO | app.utils.audio_emotion_loader | Loading voice emotion model 'superb/wav2vec2-base-superb-er' on 'cuda'
+2025-12-11 23:19:27 | INFO | app.utils.audio_emotion_loader | Voice emotion model loaded successfully
+2025-12-11 23:20:41 | INFO | app.utils.whisper_loader | Loading Whisper model 'medium' on device 'cuda'
+2025-12-11 23:20:48 | INFO | app.utils.whisper_loader | Whisper model loaded successfully
+2025-12-11 23:20:48 | INFO | app.utils.audio_emotion_loader | Loading voice emotion model 'superb/wav2vec2-base-superb-er' on 'cuda'
+2025-12-11 23:20:49 | INFO | app.utils.audio_emotion_loader | Voice emotion model loaded successfully
+2025-12-11 23:21:08 | INFO | app.utils.whisper_loader | Loading Whisper model 'medium' on device 'cuda'
+2025-12-11 23:21:19 | INFO | app.utils.whisper_loader | Whisper model loaded successfully
+2025-12-11 23:21:19 | INFO | app.utils.audio_emotion_loader | Loading voice emotion model 'superb/wav2vec2-base-superb-er' on 'cuda'
+2025-12-11 23:21:20 | INFO | app.utils.audio_emotion_loader | Voice emotion model loaded successfully
+2025-12-11 23:22:02 | INFO | app.services.audio_analysis_service | Running full audio analysis pipeline on: /tmp/tmp_9v1ph8t2025-11-17 19-44-24.mp4
+2025-12-11 23:22:02 | INFO | app.services.audio_transcription_service | Running transcription on file: /tmp/tmp_9v1ph8t2025-11-17 19-44-24.mp4
+2025-12-11 23:27:45 | INFO | app.utils.whisper_loader | Loading Whisper model 'medium' on device 'cuda'
+2025-12-11 23:27:53 | INFO | app.utils.whisper_loader | Whisper model loaded successfully
+2025-12-11 23:27:53 | INFO | app.utils.audio_emotion_loader | Loading voice emotion model 'superb/wav2vec2-base-superb-er' on 'cuda'
+2025-12-11 23:27:54 | INFO | app.utils.audio_emotion_loader | Voice emotion model loaded successfully
+2025-12-11 23:28:17 | INFO | app.utils.audio_extractor | Extracted WAV audio to: /tmp/tmp1ypvzpdi.wav
+2025-12-11 23:28:17 | INFO | app.services.audio_transcription_service | Running transcription on file: /tmp/tmp1ypvzpdi.wav
+2025-12-11 23:30:24 | ERROR | app.services.audio_analysis_service | Audio analysis failed: 'text'
+2025-12-11 23:32:14 | INFO | app.utils.whisper_loader | Loading Whisper model 'medium' on device 'cuda'
+2025-12-11 23:32:22 | INFO | app.utils.whisper_loader | Whisper model loaded successfully
+2025-12-11 23:32:22 | INFO | app.utils.audio_emotion_loader | Loading voice emotion model 'superb/wav2vec2-base-superb-er' on 'cuda'
+2025-12-11 23:32:24 | INFO | app.utils.audio_emotion_loader | Voice emotion model loaded successfully
+2025-12-11 23:32:35 | INFO | app.utils.audio_extractor | Extracted WAV audio to: /tmp/tmp8_u0_7mv.wav
+2025-12-11 23:32:35 | INFO | app.services.audio_transcription_service | Running transcription on file: /tmp/tmp8_u0_7mv.wav
+2025-12-11 23:38:44 | INFO | app.utils.whisper_loader | Loading Whisper model 'medium' on device 'cuda'
+2025-12-11 23:38:51 | INFO | app.utils.whisper_loader | Whisper model loaded successfully
+2025-12-11 23:38:51 | INFO | app.utils.audio_emotion_loader | Loading voice emotion model 'superb/wav2vec2-base-superb-er' on 'cuda'
+2025-12-11 23:38:53 | INFO | app.utils.audio_emotion_loader | Voice emotion model loaded successfully
+2025-12-11 23:39:01 | INFO | app.utils.audio_extractor | Extracted WAV audio to: /tmp/tmp8y6xo8mb.wav
+2025-12-11 23:39:01 | INFO | app.services.audio_transcription_service | Running transcription on file: /tmp/tmp8y6xo8mb.wav
+2025-12-11 23:41:22 | INFO | app.utils.audio_extractor | Extracted WAV audio to: /tmp/tmpwlje975a.wav
+2025-12-11 23:41:22 | INFO | app.services.audio_transcription_service | Running transcription on file: /tmp/tmpwlje975a.wav
+2025-12-11 23:53:06 | INFO | app.utils.whisper_loader | Loading Whisper model 'medium' on device 'cuda'
+2025-12-11 23:53:13 | INFO | app.utils.whisper_loader | Whisper model loaded successfully
+2025-12-11 23:53:13 | INFO | app.utils.audio_emotion_loader | Loading voice emotion model 'superb/wav2vec2-base-superb-er' on 'cuda'
+2025-12-11 23:53:14 | INFO | app.utils.audio_emotion_loader | Voice emotion model loaded successfully
+2025-12-11 23:53:57 | INFO | app.utils.audio_extractor | Extracted WAV audio to: /tmp/tmpbj10lffh.wav
+2025-12-11 23:53:58 | INFO | app.services.audio_transcription_service | Running transcription on file: /tmp/tmpbj10lffh.wav
+2025-12-11 23:57:55 | INFO | app.utils.whisper_loader | Loading Whisper model 'medium' on device 'cuda'
+2025-12-11 23:58:03 | INFO | app.utils.whisper_loader | Whisper model loaded successfully
+2025-12-11 23:58:03 | INFO | app.utils.audio_emotion_loader | Loading voice emotion model 'superb/wav2vec2-base-superb-er' on 'cuda'
+2025-12-11 23:58:04 | INFO | app.utils.audio_emotion_loader | Voice emotion model loaded successfully
+2025-12-11 23:59:25 | INFO | app.utils.audio_extractor | Extracted WAV audio to: /tmp/tmpote9r87q.wav
+2025-12-11 23:59:26 | INFO | app.services.audio_transcription_service | Running transcription on file: /tmp/tmpote9r87q.wav
+2025-12-11 23:59:28 | ERROR | app.services.audio_analysis_service | Audio analysis failed: AudioEmotionTimelineService.analyze_timeline() missing 1 required positional argument: 'whisper_segments'

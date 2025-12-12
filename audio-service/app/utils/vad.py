@@ -1,13 +1,9 @@
 import webrtcvad
 import numpy as np
-import librosa
 
 
-def run_vad(audio, sample_rate=16000, frame_ms=30, aggressiveness=2):
-    """
-    Runs WebRTC VAD over an audio waveform.
-    Returns a boolean mask indicating which frames contain speech.
-    """
+def run_vad(audio, sample_rate: int = 16000, frame_ms: int = 30, aggressiveness: int = 2):
+    """Run VAD over audio and return frame time ranges plus a speech mask."""
     vad = webrtcvad.Vad(aggressiveness)
 
     frame_len = int(sample_rate * frame_ms / 1000)
@@ -27,3 +23,9 @@ def run_vad(audio, sample_rate=16000, frame_ms=30, aggressiveness=2):
         speech_mask.append(is_speech)
 
     return frames, speech_mask
+
+
+def detect_speech(audio, sample_rate: int = 16000, frame_ms: int = 30, aggressiveness: int = 2) -> bool:
+    """Return True if any speech is detected in the audio."""
+    _, speech_mask = run_vad(audio, sample_rate=sample_rate, frame_ms=frame_ms, aggressiveness=aggressiveness)
+    return any(speech_mask)

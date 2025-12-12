@@ -8,3 +8,6 @@ python-multipart
 transformers
 librosa
 soundfile
+webrtcvad
+soundfile
+librosa
